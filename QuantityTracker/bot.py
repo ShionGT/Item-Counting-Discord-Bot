@@ -25,12 +25,12 @@ item_targets = {}  # Format: {channel_id: {item: [(user_id, target_count)]}}
 
 # Helper function to parse item counts from a message
 def parse_items(message_content):
-    # Match patterns like "+5 green apples" or "+9 red apples"
-    pattern = r"\+(\d+)\s+([\w\s]+)"
+    # Match patterns like "+1,033 green apples" or "+5 red apples"
+    pattern = r"\+([\d,]+)\s+([\w\s]+)"
     matches = re.findall(pattern, message_content.lower())
 
-    # Sanitize item names by stripping extra whitespace and removing newlines
-    sanitized_items = [(int(count), item.strip().replace("\n", " ")) for count, item in matches]
+    # Sanitize item names and convert counts by removing commas
+    sanitized_items = [(int(count.replace(",", "")), item.strip().replace("\n", " ")) for count, item in matches]
     return sanitized_items
 
 # Helper function to get the counts dictionary for a specific channel
@@ -51,14 +51,29 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     print("Bot is ready!")
 
-# Event: Count items mentioned in messages
 @bot.event
 async def on_message(message):
+    # Ignore the bot's own messages
     if message.author == bot.user:
-        return  # Ignore the bot's own messages
+        return
 
-    # Parse items from the message
-    items = parse_items(message.content)
+    # Collect text from both the message content and embeds
+    message_content = message.content  # Standard message content
+
+    # Add embedded content if present
+    if message.embeds:
+        for embed in message.embeds:
+            if embed.description:
+                message_content += f"\n{embed.description}"  # Add the embed description
+            if embed.title:
+                message_content += f"\n{embed.title}"  # Add the embed title
+
+            # If the embed has fields, add them too
+            for field in embed.fields:
+                message_content += f"\n{field.name}: {field.value}"
+
+    # Parse items from the collected content
+    items = parse_items(message_content)
 
     # Update the counts for the current channel
     channel_counts = get_channel_counts(message.channel.id)
@@ -90,6 +105,7 @@ async def on_message(message):
 
     # Ensure commands still work
     await bot.process_commands(message)
+
 
 # Command: Show counts for the current channel
 @bot.command()
