@@ -25,12 +25,12 @@ item_targets = {}  # Format: {channel_id: {item: [(user_id, target_count)]}}
 
 # Helper function to parse item counts from a message
 def parse_items(message_content):
-    # Match patterns like "+1,033 green apples" or "+5 red apples"
-    pattern = r"\+([\d,]+)\s+([\w\s]+)"
+    # Match patterns like "+1,033 green apples", "+5 red apples", or "+1.5 green apples"
+    pattern = r"\+([\d,]+(?:\.\d+)?)\s+([\w\s]+)"
     matches = re.findall(pattern, message_content.lower())
 
     # Sanitize item names and convert counts by removing commas
-    sanitized_items = [(int(count.replace(",", "")), item.strip().replace("\n", " ")) for count, item in matches]
+    sanitized_items = [(float(count.replace(",", "")), item.strip().replace("\n", " ")) for count, item in matches]
     return sanitized_items
 
 # Helper function to get the counts dictionary for a specific channel
