@@ -147,6 +147,14 @@ async def reset_all(ctx):
     channel_item_counts.clear()
     await ctx.send("All item counts for all channels have been reset.")
 
+@bot.command()
+async def stop(ctx):
+    if str(ctx.author.id) == os.getenv("OWNER_ID"):
+        print("Stop Requested. The bot will now go offline.")
+        await ctx.send("Stop Requested. The bot will now go offline.")
+        exit(0)
+    await ctx.send("You do not have permissions to stop this bot.")
+
 # Command: Show all targets for the current channel
 @bot.command()
 async def targets(ctx):
